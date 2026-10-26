@@ -24,88 +24,230 @@
         />
 
         <style>
+            :root {
+                color-scheme: light;
+                --ink: #172b4d;
+                --muted: #64748b;
+                --brand: #2563eb;
+                --brand-dark: #1d4ed8;
+                --line: #e2e8f0;
+                --surface: #ffffff;
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
             body {
-                padding-top: 20px;
-                background-color: #f5f5f5;
+                min-height: 100vh;
+                padding: 56px 0;
+                color: var(--ink);
+                background:
+                    radial-gradient(
+                        circle at 8% 8%,
+                        rgba(37, 99, 235, 0.1),
+                        transparent 28rem
+                    ),
+                    linear-gradient(145deg, #f8fafc 0%, #eef4ff 100%);
+                font-family:
+                    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+                    "Segoe UI", sans-serif;
             }
 
             .container {
-                max-width: 900px;
+                max-width: 960px;
+            }
+
+            .page-heading {
+                margin: 0 auto 30px;
+                text-align: center;
+            }
+
+            .page-eyebrow {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                margin-bottom: 14px;
+                padding: 7px 12px;
+                border: 1px solid #dbeafe;
+                border-radius: 999px;
+                color: var(--brand-dark);
+                background: #eff6ff;
+                font-size: 0.75rem;
+                font-weight: 700;
+                letter-spacing: 0.08em;
+            }
+
+            .page-heading h1 {
+                margin-bottom: 10px;
+                color: var(--ink);
+                font-size: clamp(2rem, 5vw, 3rem);
+                font-weight: 750;
+                letter-spacing: -0.045em;
+            }
+
+            .page-heading p {
+                max-width: 590px;
+                margin: 0 auto;
+                color: var(--muted);
+                font-size: 1rem;
+                line-height: 1.7;
             }
 
             .card {
-                border-radius: 10px;
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                overflow: hidden;
+                border: 1px solid rgba(203, 213, 225, 0.8);
+                border-radius: 18px;
+                background: var(--surface);
+                box-shadow:
+                    0 18px 45px rgba(30, 64, 175, 0.08),
+                    0 3px 10px rgba(15, 23, 42, 0.04);
             }
 
             .card-header {
-                background-color: #007bff;
-                color: white;
-                border-radius: 10px 10px 0 0;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 20px 24px;
+                border: 0;
+                color: var(--ink);
+                background: var(--surface);
+            }
+
+            .section-icon {
+                display: grid;
+                width: 42px;
+                height: 42px;
+                flex: 0 0 42px;
+                place-items: center;
+                border-radius: 13px;
+                color: var(--brand);
+                background: #eff6ff;
+                font-size: 1.15rem;
+            }
+
+            .card-header h4 {
+                font-size: 1.1rem;
+                font-weight: 700;
+                letter-spacing: -0.02em;
+            }
+
+            .card-body {
+                padding: 8px 24px 26px;
             }
 
             .btn-primary {
-                background-color: #007bff;
-                border-color: #007bff;
+                padding: 11px 20px;
+                border-color: var(--brand);
+                border-radius: 10px;
+                background-color: var(--brand);
+                box-shadow: 0 5px 12px rgba(37, 99, 235, 0.2);
+                font-weight: 650;
+                transition:
+                    background-color 0.2s ease,
+                    box-shadow 0.2s ease,
+                    transform 0.2s ease;
             }
 
             .btn-primary:hover {
-                background-color: #0069d9;
-                border-color: #0062cc;
+                transform: translateY(-1px);
+                border-color: var(--brand-dark);
+                background-color: var(--brand-dark);
+                box-shadow: 0 8px 18px rgba(37, 99, 235, 0.25);
+            }
+
+            .btn-primary:disabled {
+                box-shadow: none;
+            }
+
+            .btn-outline-secondary {
+                padding: 9px 13px;
+                border-color: #cbd5e1;
+                border-radius: 9px;
+                color: #475569;
+                font-weight: 600;
+            }
+
+            .form-label {
+                margin-bottom: 8px;
+                color: #334155;
+                font-size: 0.92rem;
+                font-weight: 600;
+            }
+
+            .form-control,
+            .form-select {
+                min-height: 46px;
+                border-color: #d7e0ec;
+                border-radius: 10px;
+                color: var(--ink);
+                background-color: #fff;
+            }
+
+            .form-control:focus,
+            .form-select:focus {
+                border-color: #7aa7fa;
+                box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+            }
+
+            #model {
+                max-width: 100%;
             }
 
             .result-row {
-                border-bottom: 1px solid #eee;
-                padding: 8px 0;
+                padding: 12px 0;
+                border-bottom: 1px solid var(--line);
             }
 
             .result-value {
-                font-weight: bold;
-                color: #007bff;
+                color: var(--brand-dark);
+                font-weight: 700;
             }
 
             .loader {
-                border: 4px solid #f3f3f3;
-                border-top: 4px solid #007bff;
+                width: 38px;
+                height: 38px;
+                margin: 22px auto;
+                border: 4px solid #dbeafe;
+                border-top-color: var(--brand);
                 border-radius: 50%;
-                width: 40px;
-                height: 40px;
-                animation: spin 2s linear infinite;
-                margin: 20px auto;
                 display: none;
+                animation: spin 0.8s linear infinite;
             }
 
             @keyframes spin {
-                0% {
-                    transform: rotate(0deg);
-                }
-
-                100% {
+                to {
                     transform: rotate(360deg);
                 }
             }
 
             .model-desc {
-                margin-top: 10px;
-                font-style: italic;
-                color: #666;
+                min-height: 24px;
+                margin-top: 9px;
+                color: var(--muted);
+                font-size: 0.88rem;
             }
 
             .model-desc i:hover {
+                color: var(--brand);
                 opacity: 1 !important;
-                color: #007bff;
-                transition: all 0.2s ease;
+                transition: color 0.2s ease;
             }
 
             .modal-content {
-                border-radius: 10px;
+                overflow: hidden;
+                border: 0;
+                border-radius: 16px;
+                box-shadow: 0 24px 70px rgba(15, 23, 42, 0.2);
             }
 
             .modal-header {
-                border-bottom: none;
+                padding: 18px 22px;
+                border-bottom: 1px solid var(--line);
             }
 
             .modal-body {
+                padding: 22px;
                 text-align: center;
             }
 
@@ -114,19 +256,54 @@
                 height: auto;
                 display: block;
                 margin: 0 auto;
-                /* El cursor lo manejará Fancybox, pero lo dejamos si quieres un hint visual */
                 cursor: zoom-in;
+            }
+
+            .alert-danger {
+                border: 1px solid #fecaca;
+                border-radius: 12px;
+            }
+
+            @media (max-width: 575.98px) {
+                body {
+                    padding: 34px 0;
+                }
+
+                .page-heading {
+                    margin-bottom: 22px;
+                }
+
+                .card-header {
+                    padding: 17px 18px;
+                }
+
+                .card-body {
+                    padding: 6px 18px 21px;
+                }
             }
         </style>
     </head>
 
     <body>
         <div class="container">
-            <h1 class="text-center mb-4">Calculadora de Teoría de Colas</h1>
+            <header class="page-heading">
+                <div class="page-eyebrow">
+                    <i class="bi bi-graph-up-arrow" aria-hidden="true"></i>
+                    ANÁLISIS DE SISTEMAS DE ESPERA
+                </div>
+                <h1>Calculadora de Teoría de Colas</h1>
+                <p>
+                    Selecciona un modelo, ingresa sus parámetros y consulta los
+                    indicadores de desempeño de tu sistema.
+                </p>
+            </header>
 
             <div class="card mb-4">
                 <div class="card-header">
-                    <h4 class="mb-0">Parámetros del modelo</h4>
+                    <span class="section-icon" aria-hidden="true">
+                        <i class="bi bi-sliders"></i>
+                    </span>
+                    <h4 class="mb-0">Configura tu modelo</h4>
                 </div>
                 <div class="card-body">
                     <div class="row">
@@ -195,7 +372,10 @@
 
             <div id="results-container" class="card mb-4" style="display: none">
                 <div class="card-header">
-                    <h4 class="mb-0">Resultados</h4>
+                    <span class="section-icon" aria-hidden="true">
+                        <i class="bi bi-bar-chart-line"></i>
+                    </span>
+                    <h4 class="mb-0">Resultados del análisis</h4>
                 </div>
                 <div class="card-body">
                     <div id="results"></div>
@@ -535,14 +715,25 @@
                     const tbody = document.createElement("tbody");
 
                     // Orden específico de los parámetros
+                    const probabilityParams = Object.keys(results)
+                        .filter((key) => /^P\d+$/.test(key) && key !== "P0")
+                        .sort(
+                            (a, b) =>
+                                Number(a.slice(1)) - Number(b.slice(1))
+                        );
                     const orderedParams = [
                         "ρ",
                         "P0",
-                        "Pn",
+                        ...probabilityParams,
+                        "Pk",
+                        "PE",
+                        "PNE",
                         "Lq",
                         "L",
+                        "Ln",
                         "Wq",
                         "W",
+                        "Wn",
                     ];
 
                     // Función para crear el botón de copia

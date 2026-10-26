@@ -121,7 +121,12 @@ def calculate():
         )
         
         # Realizar cálculos básicos
-        results = calculator.calculate(n=n_clients)
+        if model == 'PICM' and n_clients is not None:
+            results = calculator.calculate()
+            for n in range(1, n_clients + 1):
+                results[f'P{n}'] = calculator.calcular_Pn(n)
+        else:
+            results = calculator.calculate(n=n_clients)
         
         # Calcular costos si se proporcionaron los datos
         cost_wait = float(data.get('cost_wait', 0))
@@ -149,7 +154,7 @@ def calculate():
             'P0': 'Probabilidad de sistema vacío',
             'PE': 'Probabilidad de sistema ocupado',
             'PNE': 'Probabilidad de que no todos los servidores estén ocupados',
-            'Pk': 'Probabilidad de k clientes en el sistema',
+            'Pk': 'Probabilidad de que un cliente tenga que esperar',
             'L': 'Número promedio de clientes en el sistema (L)',
             'Lq': 'Número promedio de clientes en la cola (Lq)',
             'Ln': 'Número esperado de clientes en cola cuando hay cola',
@@ -163,7 +168,10 @@ def calculate():
             'CT': 'Costo total del sistema'
         }
         
-        if n_clients is not None:
+        if model == 'PICM' and n_clients is not None:
+            for n in range(1, n_clients + 1):
+                descriptions[f'P{n}'] = f'Probabilidad de {n} clientes en el sistema'
+        elif n_clients is not None:
             descriptions[f'P{n_clients}'] = f'Probabilidad de {n_clients} clientes en el sistema'
         
         # Formatear resultados para evitar números muy largos
