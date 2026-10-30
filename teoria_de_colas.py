@@ -10,12 +10,23 @@ class QueueTheoryCalculator:
         self.op = 0       # Modelo seleccionado (1: PICS, 2: PICM, 3: PFCS, 4: PFCM)
         
         # Costos
-        self.costo_unitario = 0
+        self.costo_espera = 0
+        self.costo_sistema = 0
+        self.costo_servicio = 0
         self.horas_laborables = 8  # Valor por defecto
-        self.costo_diario = 0
+        self.costo_servidor = 0
 
     def set_parameters(self, lambda_, mu, k=1, M=0, n=0, op=1):
         """Establece los parámetros del modelo"""
+        if lambda_ < 0 or mu <= 0:
+            raise ValueError("Las tasas deben cumplir λ >= 0 y μ > 0.")
+        if k < 1:
+            raise ValueError("El número de servidores debe ser mayor que cero.")
+        if op in [3, 4] and (M is None or M < 0):
+            raise ValueError("El tamaño de la población debe ser mayor o igual que cero.")
+        if op == 4 and k > M:
+            raise ValueError("El número de servidores no puede superar el tamaño de la población.")
+
         self.lambda_ = lambda_
         self.mu = mu
         self.k = k
@@ -23,17 +34,41 @@ class QueueTheoryCalculator:
         self.n = n
         self.op = op
 
-    def set_cost_parameters(self, costo_unitario, costo_diario, horas_laborables=8):
-        """Establece los parámetros de costos"""
-        self.costo_unitario = costo_unitario
-        self.costo_diario = costo_diario
+    def set_cost_parameters(
+        self,
+        costo_espera=0,
+        costo_servidor=0,
+        horas_laborables=8,
+        costo_sistema=None,
+        costo_servicio=None,
+        costo_unitario=None,
+        costo_diario=None
+    ):
+        """Establece los costos independientes del sistema"""
+        if costo_unitario is not None:
+            costo_espera = costo_sistema = costo_servicio = costo_unitario
+        if costo_diario is not None:
+            costo_servidor = costo_diario
+        if any(costo < 0 for costo in (
+            costo_espera, costo_sistema or 0, costo_servicio or 0, costo_servidor
+        )):
+            raise ValueError("Los costos no pueden ser negativos.")
+        if horas_laborables <= 0:
+            raise ValueError("Las horas laborables deben ser mayores que cero.")
+
+        self.costo_espera = costo_espera
+        self.costo_sistema = costo_sistema if costo_sistema is not None else costo_espera
+        self.costo_servicio = costo_servicio if costo_servicio is not None else costo_espera
         self.horas_laborables = horas_laborables
+        self.costo_servidor = costo_servidor
 
     # --------------------- CÁLCULOS BÁSICOS ---------------------
     
     def calcular_factorial(self, n):
         """Calcula el factorial de un número"""
-        return math.factorial(n) if n >= 0 else 1
+        if n < 0:
+            raise ValueError("El factorial solo está definido para valores no negativos.")
+        return math.factorial(n)
     
     def es_estable(self): #condicion de estabilidad
         """Verifica la estabilidad del sistema"""
@@ -99,6 +134,10 @@ class QueueTheoryCalculator:
         """Calcula Pn - Probabilidad de que haya n clientes en el sistema"""
         if n is None:
             n = self.n
+        if n < 0:
+            raise ValueError("El número de clientes debe ser mayor o igual que cero.")
+        if self.op in [3, 4] and n > self.M:
+            raise ValueError("En un modelo de población finita, n no puede superar M.")
         
         if self.op == 1:  # M/M/1 (PICS)
             if self.es_estable():
@@ -146,8 +185,12 @@ class QueueTheoryCalculator:
         return 0
 
     def calcular_PNE(self):
-        """Calcula PNE - Probabilidad de que un cliente no tenga que esperar (PFCM)"""
-        return 1 - self.calcular_PE()
+        """Calcula PNE - Probabilidad de que un cliente no tenga que esperar"""
+        if self.op == 2:  # PICM
+            return 1 - self.calcular_Pk()
+        elif self.op in [3, 4]:  # PFCS o PFCM
+            return 1 - self.calcular_PE()
+        return 0
 
     # --------------------- MEDIDAS DE DESEMPEÑO ---------------------
 
@@ -276,23 +319,24 @@ class QueueTheoryCalculator:
 
     def calcular_CTte(self):
         """Costo total de tiempo de espera"""
-        return self.lambda_ * self.horas_laborables * self.calcular_Wq() * self.costo_unitario
+        return self.lambda_ * self.horas_laborables * self.calcular_Wq() * self.costo_espera
 
     def calcular_CTts(self):
         """Costo total de tiempo en el sistema"""
-        return self.lambda_ * self.horas_laborables * self.calcular_W() * self.costo_unitario
+        return self.lambda_ * self.horas_laborables * self.calcular_W() * self.costo_sistema
 
     def calcular_CTse(self):
         """Costo total de servicio"""
-        return self.lambda_ * self.horas_laborables * (1 / self.mu) * self.costo_unitario
+        return self.lambda_ * self.horas_laborables * (1 / self.mu) * self.costo_servicio
 
     def calcular_CTs(self):
         """Costo total de servidores"""
-        return self.k * self.costo_diario
+        return self.k * self.costo_servidor
 
     def calcular_CT(self):
         """Costo total del sistema"""
-        return self.calcular_CTts() + self.calcular_CTs()
+        return (self.calcular_CTte() + self.calcular_CTts() +
+                self.calcular_CTse() + self.calcular_CTs())
     
     # --------------------- CÁLCULOS GENERALES ---------------------
     def calculate(self, n=None):
@@ -330,6 +374,7 @@ class QueueTheoryCalculator:
                 
             elif self.op == 2:  # PICM
                 results['Pk'] = self.calcular_Pk()
+                results['PNE'] = self.calcular_PNE()
                 results['L'] = self.calcular_L()
                 results['Lq'] = self.calcular_Lq()
                 results['Ln'] = self.calcular_Ln()

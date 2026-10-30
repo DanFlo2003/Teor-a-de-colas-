@@ -335,6 +335,20 @@
                                 class="model-desc"
                             ></div>
                         </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="time_unit" class="form-label"
+                                >Unidad de tiempo para las tasas:</label
+                            >
+                            <select id="time_unit" class="form-select">
+                                <option value="segundos">Por segundo</option>
+                                <option value="minutos">Por minuto</option>
+                                <option value="horas" selected>Por hora</option>
+                            </select>
+                            <div class="model-desc">
+                                La unidad seleccionada se aplica a λ, μ y a
+                                los resultados de tiempo.
+                            </div>
+                        </div>
                     </div>
 
                     <form id="params-form">
@@ -436,6 +450,7 @@
         <script>
             document.addEventListener("DOMContentLoaded", function () {
                 const modelSelect = document.getElementById("model");
+                const timeUnitSelect = document.getElementById("time_unit");
                 const paramsForm = document.getElementById("params-form");
                 const requiredParamsDiv =
                     document.getElementById("required-params");
@@ -633,6 +648,7 @@
                     // Crear objeto de datos con el modelo y parámetros
                     const formData = {
                         model: modelSelect.value,
+                        time_unit: timeUnitSelect.value,
                     };
 
                     // Añadir parámetros requeridos
