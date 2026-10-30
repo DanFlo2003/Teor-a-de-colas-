@@ -15,6 +15,8 @@ class QueueTheoryCalculator:
         self.costo_servicio = 0
         self.horas_laborables = 8  # Valor por defecto
         self.costo_servidor = 0
+        self.factor_periodo = 8
+        self.factor_costo_servidor = 1
 
     def set_parameters(self, lambda_, mu, k=1, M=0, n=0, op=1):
         """Establece los parámetros del modelo"""
@@ -33,6 +35,13 @@ class QueueTheoryCalculator:
         self.M = M
         self.n = n
         self.op = op
+        self.costo_espera = 0
+        self.costo_sistema = 0
+        self.costo_servicio = 0
+        self.horas_laborables = 8
+        self.costo_servidor = 0
+        self.factor_periodo = 8
+        self.factor_costo_servidor = 1
 
     def set_cost_parameters(
         self,
@@ -42,7 +51,9 @@ class QueueTheoryCalculator:
         costo_sistema=None,
         costo_servicio=None,
         costo_unitario=None,
-        costo_diario=None
+        costo_diario=None,
+        factor_periodo=None,
+        factor_costo_servidor=None
     ):
         """Establece los costos independientes del sistema"""
         if costo_unitario is not None:
@@ -61,6 +72,12 @@ class QueueTheoryCalculator:
         self.costo_servicio = costo_servicio if costo_servicio is not None else costo_espera
         self.horas_laborables = horas_laborables
         self.costo_servidor = costo_servidor
+        self.factor_periodo = (
+            horas_laborables if factor_periodo is None else factor_periodo
+        )
+        self.factor_costo_servidor = (
+            1 if factor_costo_servidor is None else factor_costo_servidor
+        )
 
     # --------------------- CÁLCULOS BÁSICOS ---------------------
     
@@ -288,8 +305,12 @@ class QueueTheoryCalculator:
                 raise ValueError("El sistema no es estable. La tasa de llegada entre la tasa de servicio debe ser menor que 1.")
         
         elif self.op == 2:  # M/M/k (PICM)
-            term = (self.mu * ((self.lambda_ / self.mu) ** self.k) * self.calcular_P0()) / (self.calcular_factorial(self.k - 1) * ((self.k * self.mu - self.lambda_) ** 2))
-            return term
+            denominator = self.k * self.mu - self.lambda_
+            if denominator <= 0:
+                raise ValueError(
+                    "El sistema M/M/k no es estable: kμ debe ser mayor que λ."
+                )
+            return self.calcular_Pk() / denominator
         
         elif self.op == 3:  # PFCS
             return self.calcular_Lq() / ((self.M - self.calcular_L()) * self.lambda_)
@@ -319,19 +340,39 @@ class QueueTheoryCalculator:
 
     def calcular_CTte(self):
         """Costo total de tiempo de espera"""
-        return self.lambda_ * self.horas_laborables * self.calcular_Wq() * self.costo_espera
+        if self.op in [3, 4]:
+            return self.calcular_Lq() * self.costo_espera
+        return (
+            self.lambda_ * self.factor_periodo *
+            self.calcular_Wq() * self.costo_espera
+        )
 
     def calcular_CTts(self):
         """Costo total de tiempo en el sistema"""
-        return self.lambda_ * self.horas_laborables * self.calcular_W() * self.costo_sistema
+        if self.op in [3, 4]:
+            return self.calcular_L() * self.costo_sistema
+        return (
+            self.lambda_ * self.factor_periodo *
+            self.calcular_W() * self.costo_sistema
+        )
 
     def calcular_CTse(self):
         """Costo total de servicio"""
-        return self.lambda_ * self.horas_laborables * (1 / self.mu) * self.costo_servicio
+        if self.op in [3, 4]:
+            clientes_en_servicio = max(0, self.calcular_L() - self.calcular_Lq())
+            return clientes_en_servicio * self.costo_servicio
+        return (
+            self.lambda_ * self.factor_periodo *
+            (1 / self.mu) * self.costo_servicio
+        )
 
     def calcular_CTs(self):
         """Costo total de servidores"""
-        return self.k * self.costo_servidor
+        return self.k * self.costo_servidor * self.factor_costo_servidor
+
+    def calcular_CTs_periodo(self):
+        """Costo de los servidores usando el costo horario normalizado."""
+        return self.calcular_CTs()
 
     def calcular_CT(self):
         """Costo total del sistema"""

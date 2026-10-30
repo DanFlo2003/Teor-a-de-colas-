@@ -204,6 +204,29 @@
                 font-weight: 700;
             }
 
+            .cost-breakdown {
+                margin-top: 24px;
+                padding: 18px;
+                border: 1px solid #dbeafe;
+                border-radius: 14px;
+                background: #f8fbff;
+            }
+
+            .cost-breakdown h5 {
+                margin-bottom: 14px;
+                color: var(--ink);
+                font-weight: 700;
+            }
+
+            .cost-breakdown .table {
+                margin-bottom: 0;
+            }
+
+            .cost-total {
+                color: var(--brand-dark);
+                font-weight: 750;
+            }
+
             .loader {
                 width: 38px;
                 height: 38px;
@@ -343,6 +366,7 @@
                                 <option value="segundos">Por segundo</option>
                                 <option value="minutos">Por minuto</option>
                                 <option value="horas" selected>Por hora</option>
+                                <option value="dias">Por día</option>
                             </select>
                             <div class="model-desc">
                                 La unidad seleccionada se aplica a λ, μ y a
@@ -598,6 +622,28 @@
                                     label.textContent =
                                         data.optional_descriptions[param];
 
+                                    if (param === "cost_server_unit") {
+                                        const select =
+                                            document.createElement("select");
+                                        select.className = "form-select";
+                                        select.id = param;
+                                        select.name = param;
+                                        [
+                                            ["hour", "USD por hora"],
+                                            ["day", "USD por día"],
+                                        ].forEach(([value, text]) => {
+                                            const option =
+                                                document.createElement("option");
+                                            option.value = value;
+                                            option.textContent = text;
+                                            select.appendChild(option);
+                                        });
+                                        optionalParamsDiv.appendChild(col);
+                                        col.appendChild(label);
+                                        col.appendChild(select);
+                                        return;
+                                    }
+
                                     const input =
                                         document.createElement("input");
                                     input.type = "number";
@@ -660,9 +706,9 @@
 
                     // Añadir parámetros opcionales (solo los que tienen valor)
                     document
-                        .querySelectorAll("#optional-params input")
+                        .querySelectorAll("#optional-params input, #optional-params select")
                         .forEach((input) => {
-                            if (input.value) {
+                            if (input.value || input.name === "cost_server_unit") {
                                 formData[input.name] = input.value;
                             }
                         });
@@ -687,7 +733,11 @@
                             }
 
                             // Mostrar resultados
-                            displayResults(data.results, data.descriptions);
+                            displayResults(
+                                data.results,
+                                data.descriptions,
+                                data.cost_breakdown
+                            );
                         })
                         .catch((error) => {
                             // Ocultar loader
@@ -707,7 +757,7 @@
                 }
 
                 // Función para mostrar resultados
-                function displayResults(results, descriptions) {
+                function displayResults(results, descriptions, costBreakdown) {
                     resultsDiv.innerHTML = "";
 
                     // Crear una tabla para los resultados
@@ -813,7 +863,45 @@
 
                     table.appendChild(tbody);
                     resultsDiv.appendChild(table);
+
+                    if (costBreakdown && costBreakdown.length) {
+                        renderCostBreakdown(costBreakdown);
+                    }
                     resultsContainer.style.display = "block";
+                }
+
+                function renderCostBreakdown(costBreakdown) {
+                    const section = document.createElement("section");
+                    section.className = "cost-breakdown";
+
+                    const heading = document.createElement("h5");
+                    heading.textContent = "Desglose general de costos";
+                    section.appendChild(heading);
+
+                    const table = document.createElement("table");
+                    table.className = "table table-sm align-middle";
+                    table.innerHTML =
+                        "<thead><tr><th>Concepto</th><th>Fórmula</th><th>Resultado</th></tr></thead>";
+                    const body = document.createElement("tbody");
+
+                    costBreakdown.forEach((item, index) => {
+                        const row = document.createElement("tr");
+                        if (index === costBreakdown.length - 2) {
+                            row.className = "cost-total";
+                        }
+                        [item.name, item.formula, `${item.value} ${item.unit}`].forEach(
+                            (value) => {
+                                const cell = document.createElement("td");
+                                cell.textContent = value;
+                                row.appendChild(cell);
+                            }
+                        );
+                        body.appendChild(row);
+                    });
+
+                    table.appendChild(body);
+                    section.appendChild(table);
+                    resultsDiv.appendChild(section);
                 }
 
                 // Inicializa Fancybox cuando el modal de fórmulas se abre.
